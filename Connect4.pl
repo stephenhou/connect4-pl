@@ -19,7 +19,7 @@ replace(I, L, E, K) :-
 
 
 print_board(gameBoard(X, _)):-
-  write("Choose column 1-7 to place piece"),
+  write("Choose column 1-6 to place piece"),
   nl,
   nl,
   print_board_rows(X).
@@ -67,13 +67,15 @@ play_move('O', gameBoard(_, _)) :-
 
 play_move('X', gameBoard(Board, Spaces)) :- 
   print_board(gameBoard(Board, Spaces)),
-  read_player_input(Input),
+  read_player_input(Input, Spaces),
   update_height(Input, Spaces, UpdatedSpaces, Height),
   update_board(Input, Height, Board, 'X', UpdatedBoard),
-  play_move('O', gameBoard(UpdatedBoard, UpdatedSpaces)).
+  play_move('X', gameBoard(UpdatedBoard, UpdatedSpaces)).
 
-read_player_input(Input) :- 
-  read(Input).
+read_player_input(Input, Spaces) :-
+  repeat,
+  read(Input),
+  check_input(Input, Spaces), !.
 
 update_height(Input, Spaces, UpdatedSpaces, Elem) :-
   nth1(Input, Spaces, Elem),
@@ -86,12 +88,28 @@ update_board(Input, Height, Board, Player, UpdatedBoard) :-
   replace(Height, Board, UpdatedRow, UpdatedBoard).
   
 check_input(Input, Spaces) :- 
-  nth0(Input1, Spaces, Elem),
-  write(Input1),
-  write(Elem),
-  Input1 is Input - 1,
-  (Input > 7 -> fail, !;
-  (Input < 1 -> fail, !;
-  (Elem < 0 -> fail))), !.
+  valid_column(Input),
+  nth1(Input, Spaces, Elem),
+  valid_height(Elem).
+
+print_fail_message :-
+  nl,
+  write("Invalid Input Column"),
+  fail.
+
+valid_column(1).
+valid_column(2).
+valid_column(3).
+valid_column(4).
+valid_column(5).
+valid_column(6).
+
+valid_height(1).
+valid_height(2).
+valid_height(3).
+valid_height(4).
+valid_height(5).
+valid_height(6).
+valid_height(7).
 
 
