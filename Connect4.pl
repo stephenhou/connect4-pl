@@ -62,15 +62,43 @@ computer_start :-
   connect4_start(X),
   play_move('O', X), !.
 
-play_move('O', gameBoard(_, _)) :-
-  write("Computer playing").
+check_win(Board) :-
+  %TODO
+  false.
+
+play_move('X', gameBoard(Board, _)) :-
+  check_win(Board),
+  write("COMPUTER WON").
+
+play_move('O', gameBoard(Board, _)) :-
+  check_win(Board),
+  write("YOU WON").
+
+play_move('O', gameBoard(Board, Spaces)) :-
+  computer_move(gameBoard(Board, Spaces), Decision),
+  update_height(Decision, Spaces, UpdatedSpaces, Height),
+  update_board(Decision, Height, Board, 'O', UpdatedBoard),
+  play_move('X', gameBoard(UpdatedBoard, UpdatedSpaces)).
+
+play_move(_, gameBoard(_, Spaces)) :-
+  check_board_full(Spaces),
+  write("DRAW").
 
 play_move('X', gameBoard(Board, Spaces)) :- 
   print_board(gameBoard(Board, Spaces)),
   read_player_input(Input, Spaces),
   update_height(Input, Spaces, UpdatedSpaces, Height),
   update_board(Input, Height, Board, 'X', UpdatedBoard),
-  play_move('X', gameBoard(UpdatedBoard, UpdatedSpaces)).
+  play_move('O', gameBoard(UpdatedBoard, UpdatedSpaces)).
+
+computer_move(_, Decision) :-
+  %TODO
+  Decision is 1.
+
+check_board_full(Spaces) :-
+  sort(0, @>=, Spaces,  Sorted),
+  nth1(1, Sorted, Elem),
+  \+valid_height(Elem).
 
 read_player_input(Input, Spaces) :-
   repeat,
@@ -91,11 +119,6 @@ check_input(Input, Spaces) :-
   valid_column(Input),
   nth1(Input, Spaces, Elem),
   valid_height(Elem).
-
-print_fail_message :-
-  nl,
-  write("Invalid Input Column"),
-  fail.
 
 valid_column(1).
 valid_column(2).
