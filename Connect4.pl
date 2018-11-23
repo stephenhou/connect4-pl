@@ -8,7 +8,7 @@ connect4_start(gameBoard([['*','*','*','*','*','*'],
 	                      ['*','*','*','*','*','*'],
 	                      ['*','*','*','*','*','*'],
 	                      ['*','*','*','*','*','*'],
-	                      ['*','*','*','*','*','*']], [7, 0, 0, 0, 0, 0, 0])).
+	                      ['*','*','*','*','*','*']], [7, 7, 7, 7, 7, 7])).
 
 starting_player(0).
 starting_player(1).
@@ -66,6 +66,11 @@ check_win(Board) :-
   %TODO
   false.
 
+play_move(_, gameBoard(Board, Spaces)) :-
+  check_board_full(Spaces),
+  print_board(gameBoard(Board, _)),
+  write("DRAW").
+
 play_move('X', gameBoard(Board, _)) :-
   check_win(Board),
   print_board(gameBoard(Board, _)),
@@ -82,11 +87,6 @@ play_move('O', gameBoard(Board, Spaces)) :-
   update_board(Decision, Height, Board, 'O', UpdatedBoard),
   play_move('X', gameBoard(UpdatedBoard, UpdatedSpaces)).
 
-play_move(_, gameBoard(Board, Spaces)) :-
-  check_board_full(Spaces),
-  print_board(gameBoard(Board, _)),
-  write("DRAW").
-
 play_move('X', gameBoard(Board, Spaces)) :- 
   print_board(gameBoard(Board, Spaces)),
   read_player_input(Input, Spaces),
@@ -95,6 +95,7 @@ play_move('X', gameBoard(Board, Spaces)) :-
   play_move('O', gameBoard(UpdatedBoard, UpdatedSpaces)).
 
 computer_move(gameBoard(Board, Spaces), Decision) :-
+  %TODO incorporate check win check lose decisions
   repeat,
   random(1, 7, Decision),
   nth1(Decision, Spaces, Column),
