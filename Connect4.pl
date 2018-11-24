@@ -1,5 +1,5 @@
 % To run it, try:
-% play(X).
+% play(Start).
 
 :- use_module(library(clpfd)).
 
@@ -10,41 +10,43 @@ connect4_start(gameBoard([['*','*','*','*','*','*'],
 	                      ['*','*','*','*','*','*'],
 	                      ['*','*','*','*','*','*'],
 	                      ['*','*','*','*','*','*'],
-						  ['*','*','*','*','*','*']], [7, 7, 7, 7, 7, 7])).
+						            ['*','*','*','*','*','*']], [7, 7, 7, 7, 7, 7])).
 
 % checks for row
-rowWin(X, [H|T]) :-
-	(  checkRow(X, 0, H)
+rowWin(X, [H|T], N) :-
+	(  checkRow(X, 0, H, N)
     -> true
-    ;  rowWin(X, T)
+    ;  rowWin(X, T, N)
      ).
 
-checkRow(_, 4, _).
-checkRow(X, N, [X|T]) :-
+checkRow(_, N, _, N).
+checkRow(X, N, [X|T], Lim) :-
 	N1 is N+1,
-	checkRow(X, N1, T).
-checkRow(X, _, [H|T]) :-
+	N < Lim,
+	checkRow(X, N1, T, Lim).
+checkRow(X, N, [H|T], Lim) :-
 	dif(X, H),
-	checkRow(X, 0, T).
+	N < Lim,
+	checkRow(X, 0, T, Lim).
 
 % checks for column
-columnWin(X, GB) :-
+columnWin(X, GB, N ) :-
 	transpose(GB, Trans),
-	rowWin(X, Trans).
+	rowWin(X, Trans, N).
 
 getDiags(Matx, Diags) :-
 	addRowsToDiags([], Matx, 0, Diags).
 
 % checks for / diagonal
-diagWin1(X, GB) :-
+diagWin1(X, GB, N) :-
 	getDiags(GB, Diags),
-	rowWin(X, Diags).
+	rowWin(X, Diags, N).
 
 % checks for \ diagonal
-diagWin2(X, GB) :-
+diagWin2(X, GB, N) :-
 	rotateMatx(GB, Rotated),
 	getDiags(Rotated, Diags),
-	rowWin(X, Diags).
+	rowWin(X, Diags, N).
 
 rotateMatx(X, Z) :-
 	transpose(X, Y),
@@ -70,7 +72,7 @@ set([H|T], I, X, [H|R]):- I > -1, NI is I-1, set(T, NI, X, R), !.
 
 % test :- connect4_start(X),
 %	diagWin2('X', X).
-
+ 
 starting_player(0).
 starting_player(1).
 
@@ -100,7 +102,6 @@ print_board_element([H|T]) :-
   write("   "),
   print_board_element(T).
 
-
 play(Input) :-
   repeat,
   write("Who starts? 0=you, 1=computer"),
@@ -123,11 +124,11 @@ computer_start :-
   connect4_start(X),
   play_move('O', X), !.
 
-check_win(X, Board) :-
-  rowWin(X, Board);
-  columnWin(X, Board);
-  diagWin1(X, Board);
-  diagWin2(X, Board).
+check_win(X, Board, N) :-
+  rowWin(X, Board, N);
+  columnWin(X, Board, N);
+  diagWin1(X, Board, N);
+  diagWin2(X, Board, N).
 
 play_move(_, gameBoard(Board, Spaces)) :-
   check_board_full(Spaces),
@@ -135,14 +136,14 @@ play_move(_, gameBoard(Board, Spaces)) :-
   write("DRAW").
 
 play_move('X', gameBoard(Board, _)) :-
-  check_win('X', Board),
-  print_board(gameBoard(Board, _)),
-  write("COMPUTER WON").
-
-play_move('O', gameBoard(Board, _)) :-
-  check_win('O', Board),
+  check_win('X', Board, 4),
   print_board(gameBoard(Board, _)),
   write("YOU WON").
+
+play_move('O', gameBoard(Board, _)) :-
+  check_win('O', Board, 4),
+  print_board(gameBoard(Board, _)),
+  write("COMPUTER WON").
 
 play_move('O', gameBoard(Board, Spaces)) :-
   computer_move(gameBoard(Board, Spaces), Decision),
@@ -157,8 +158,33 @@ play_move('X', gameBoard(Board, Spaces)) :-
   update_board(Input, Height, Board, 'X', UpdatedBoard),
   play_move('O', gameBoard(UpdatedBoard, UpdatedSpaces)).
 
+%test(Decision) :- connect4_start(X),
+%  chooseCompMove(6, Decision, X, 0, 4).
+
+chooseCompMove(_, 0, _, _, 0, _) :- false.
+chooseCompMove(_, N, N, _, 1, _).
+chooseCompMove(X, N, Decision, gameBoard(Board, Spaces), 0, Target) :-
+  nth1(N, Spaces, Column),
+  (  valid_height(Column)
+  -> update_height(N, Spaces, _, Height),
+     update_board(N, Height, Board, X, UpdatedBoard),
+     (  check_win(X, UpdatedBoard, Target)
+     -> chooseCompMove(X, N, Decision, _, 1, Target)
+     ;  N1 is N-1,
+        chooseCompMove(X, N1, Decision, gameBoard(Board, Spaces), 0, Target)
+     )
+  ;  N1 is N-1,
+     chooseCompMove(X, N1, Decision, gameBoard(Board, Spaces), 0, Target)
+  ).
+  
+
 computer_move(gameBoard(Board, Spaces), Decision) :-
-  %TODO incorporate check win check lose decisions
+  chooseCompMove('O', 6, Decision, gameBoard(Board, Spaces), 0, 4);
+  chooseCompMove('X', 6, Decision, gameBoard(Board, Spaces), 0, 4);
+  chooseCompMove('O', 6, Decision, gameBoard(Board, Spaces), 0, 3);
+  chooseCompMove('X', 6, Decision, gameBoard(Board, Spaces), 0, 3);
+  chooseCompMove('O', 6, Decision, gameBoard(Board, Spaces), 0, 2);
+  chooseCompMove('X', 6, Decision, gameBoard(Board, Spaces), 0, 2);
   repeat,
   random(1, 7, Decision),
   nth1(Decision, Spaces, Column),
@@ -184,7 +210,7 @@ update_board(Input, Height, Board, Player, UpdatedBoard) :-
   replace(Input, Row, Player, UpdatedRow),
   replace(Height, Board, UpdatedRow, UpdatedBoard).
   
-check_input(Input, Spaces) :- 
+check_input(Input, Spaces) :-
   valid_column(Input),
   nth1(Input, Spaces, Elem),
   valid_height(Elem).
