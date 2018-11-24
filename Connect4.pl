@@ -135,12 +135,12 @@ play_move(_, gameBoard(Board, Spaces)) :-
   print_board(gameBoard(Board, _)),
   write("DRAW").
 
-play_move('X', gameBoard(Board, _)) :-
+play_move(_, gameBoard(Board, _)) :-
   check_win('X', Board, 4),
   print_board(gameBoard(Board, _)),
   write("YOU WON").
 
-play_move('O', gameBoard(Board, _)) :-
+play_move(_, gameBoard(Board, _)) :-
   check_win('O', Board, 4),
   print_board(gameBoard(Board, _)),
   write("COMPUTER WON").
